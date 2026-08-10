@@ -124,12 +124,22 @@ class LocalRuntime(DockerRuntime):
         def run_command():
             nonlocal exec_result, process, exception
             try:
+                # The eval harness's Python environment must not leak into the
+                # repository testbed subprocess.
+                import os as _os
+
+                _clean_env = {
+                    key: value
+                    for key, value in _os.environ.items()
+                    if key not in ("PYTHONPATH", "PYTHONHOME", "PYTHONSTARTUP")
+                }
                 process = subprocess.Popen(
                     cmd,
                     shell=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
-                    text=False
+                    text=False,
+                    env=_clean_env,
                 )
                 exec_result, _ = process.communicate()
             except Exception as e:
@@ -216,3 +226,17 @@ class LocalRuntime(DockerRuntime):
 
     def close(self):
         pass
+
+    def run_tests(self, timeout: int = 300) -> tuple[str, str]:
+        # Remove stale build-time paths from testbed virtual environments and
+        # repeat the interpreter-variable isolation at the shell boundary.
+        self.run(
+            "grep -ls r2egym_setup /testbed/.venv/lib/*/site-packages/*.pth"
+            " 2>/dev/null | xargs -r rm -f"
+        )
+        output, error_code = self.run(
+            f"env -u PYTHONPATH -u PYTHONHOME bash {self.alt_path}/run_tests.sh",
+            timeout=timeout,
+        )
+        output = re.sub(r"\x1b\[[0-9;]*m|\r", "", output)
+        return output, error_code
