@@ -1,7 +1,10 @@
 import json
 import glob
 from r2egym.agenthub.utils.log import get_logger
-import openai
+try:
+    import openai
+except ModuleNotFoundError:
+    openai = None
 import re
 import yaml
 from dataclasses import asdict, dataclass

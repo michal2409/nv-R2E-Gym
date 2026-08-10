@@ -1,5 +1,12 @@
 import logging
-from rich.logging import RichHandler
+try:
+    from rich.logging import RichHandler
+except ModuleNotFoundError:
+    import logging
+
+    class RichHandler(logging.StreamHandler):  # type: ignore[no-redef]
+        def __init__(self, *args, **kwargs):
+            super().__init__()
 
 
 def get_logger(

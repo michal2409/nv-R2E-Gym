@@ -4,8 +4,14 @@ from time import sleep
 import time
 import uuid
 import tempfile
-import docker
-from docker.models.containers import Container
+try:
+    import docker
+    from docker.models.containers import Container
+except ModuleNotFoundError:
+    docker = None
+
+    class Container:  # type: ignore[no-redef]
+        pass
 
 from r2egym.repo_analysis.execution_log_parser import parse_log_fn, decolor_dict_keys
 from r2egym.agenthub.runtime.base import (
@@ -18,8 +24,16 @@ import hashlib
 import shutil
 import uuid
 
-import docker
-import kubernetes
+try:
+    import docker as _docker_sdk
+except ModuleNotFoundError:
+    _docker_sdk = None
+else:
+    docker = _docker_sdk
+try:
+    import kubernetes
+except ModuleNotFoundError:
+    kubernetes = None
 import tarfile
 import io
 import os
@@ -143,6 +157,8 @@ class DockerRuntime(ExecutionEnvironment):
             self.logger = logger
 
         if self.backend == "docker":
+            if docker is None:
+                raise RuntimeError("Docker SDK is required only when DockerRuntime backend is selected")
             self.client = docker.from_env(timeout=120)
         elif self.backend == "kubernetes":
             # Try in-cluster config first, fallback to kubeconfig

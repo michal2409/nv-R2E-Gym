@@ -39,6 +39,11 @@ dependencies = [
     "gpustat==1.1.1",
     "orjson==3.11.5",
     "cryptography>=44.0.0",
+    # Needed by the local evaluation path; previously installed explicitly by
+    # Gym's setup_scripts/r2e_gym.sh (they already arrive transitively via
+    # litellm/swebench — declared so a dependency bump cannot drop them).
+    "openai==2.53.0",
+    "docker==7.2.0",
 ]
 requires-python = ">=3.10"
 readme = "README.md"
