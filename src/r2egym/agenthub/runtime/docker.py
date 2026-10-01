@@ -485,7 +485,7 @@ class DockerRuntime(ExecutionEnvironment):
         )
         self.run(reset_command)
 
-    def setup_env_swesmith(self):
+    def setup_env_swesmith(self, install_agent_dependencies=True):
         try:
             commit_id = self.ds['base_commit']
             self.run("git fetch")
@@ -519,11 +519,12 @@ class DockerRuntime(ExecutionEnvironment):
             # Ensure can call and execute the tools in /usr/local/bin.
             self.run(f"ln -s /opt/miniconda3/envs/testbed /root/.venv")
             self.run('echo \'export PATH="/usr/local/bin:$PATH"\' >> ~/.bashrc')
-            self.run("python -m pip install chardet")
+            if install_agent_dependencies:
+                self.run("python -m pip install chardet")
         except Exception as e:
             self.logger.error(f"Error setting up environment: {repr(e)}")
 
-    def setup_env_swebench(self):
+    def setup_env_swebench(self, install_agent_dependencies=True):
         try:
             # make the run_tests.sh executable
             self.run("chmod +x /run_tests.sh")
@@ -542,7 +543,8 @@ class DockerRuntime(ExecutionEnvironment):
             # self.run(
             #     "python -m pip install tree-sitter==0.20.4 tree_sitter_languages==1.10.2"
             # )
-            self.run("python -m pip install chardet")
+            if install_agent_dependencies:
+                self.run("python -m pip install chardet")
             # sudo apt-get install patchutils
             # self.run("apt-get update")
             # self.run("apt-get install -y patchutils")
@@ -551,11 +553,11 @@ class DockerRuntime(ExecutionEnvironment):
                 f"Error setting up environment: {repr(e)} @ {self.docker_image}"
             )
 
-    def setup_env(self):
+    def setup_env(self, install_agent_dependencies=True):
         if self.swebench_verified:
-            return self.setup_env_swebench()
+            return self.setup_env_swebench(install_agent_dependencies=install_agent_dependencies)
         elif self.swesmith:
-            return self.setup_env_swesmith()
+            return self.setup_env_swesmith(install_agent_dependencies=install_agent_dependencies)
 
         try:
             # setup venv
@@ -582,7 +584,8 @@ class DockerRuntime(ExecutionEnvironment):
             # install required packages
             # self.run("uv pip install tree_sitter_languages") # remove since already installed in new dockers
 
-            self.run("uv pip install chardet")
+            if install_agent_dependencies:
+                self.run("uv pip install chardet")
 
             self.run("find . -name '*.pyc' -delete")
 

@@ -65,7 +65,7 @@ def evaluate(args) -> tuple[dict[str, bool], str | None]:
 
         print("Patch applied successfully. Running evaluation...")
 
-    runtime.setup_env()
+    runtime.setup_env(install_agent_dependencies=False)
     reward, test_output = runtime._calculate_reward(get_test_output=True, timeout=args.timeout)
     resolved = bool(reward)  # reward is always 1 or 0
     return {"resolved": resolved, "patch_exists": True, "patch_successfully_applied": True}, test_output
